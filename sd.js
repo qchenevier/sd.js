@@ -16598,7 +16598,6 @@ define('draw',["require", "exports", 'Hammer', './runtime', "./util", "../bower_
                     return;
                 drawing._inPan = true;
                 drawing.normalizeTransform();
-                console.log('ps');
             });
             hammer.on('pan', function (e) {
                 var drawing = _this;

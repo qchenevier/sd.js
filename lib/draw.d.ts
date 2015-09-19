@@ -1,6 +1,10 @@
 /// <reference path="../typings/tsd.d.ts" />
 import * as type from './type';
 import * as xmile from './xmile';
+export interface Point {
+    x: number;
+    y: number;
+}
 export declare function xmileToCanvasAngle(inDeg: number): number;
 export interface EntStatic {
     new (drawing: Drawing, element: xmile.ViewElement): Ent;
@@ -34,13 +38,16 @@ export declare class Drawing {
     paper: Snap.Paper;
     _g: Snap.Element;
     _t: Transform;
+    _pinchStart: Point;
+    _pinchFinished: number;
+    _inPan: boolean;
     dEnts: Ent[];
     namedEnts: {
         [n: string]: Ent;
     };
     zEnts: Ent[][];
     constructor(model: type.Model, view: xmile.View, svgElement: string | HTMLElement, overrideColors: boolean, enableMousewheel: boolean, stocksXYCenter: boolean);
-    applyDScaleAt(dscale: number, e: any): void;
+    applyDScaleAt(dscale: number, e: Point): void;
     transform(scale?: number, x?: number, y?: number): void;
     normalizeTransform(): void;
     visualize(data: any): void;

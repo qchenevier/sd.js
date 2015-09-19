@@ -111,7 +111,7 @@ function square(n: number): number {
 	return Math.pow(n, 2);
 }
 
-interface Point {
+export interface Point {
 	x: number;
 	y: number;
 }
