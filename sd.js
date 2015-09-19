@@ -16515,6 +16515,7 @@ define('draw',["require", "exports", 'Hammer', './runtime', "./util", "../bower_
     };
     var Drawing = (function () {
         function Drawing(model, view, svgElement, overrideColors, enableMousewheel, stocksXYCenter) {
+            this._inPan = false;
             this.model = model;
             this.xmile = view;
             var element;
@@ -16593,26 +16594,65 @@ define('draw',["require", "exports", 'Hammer', './runtime', "./util", "../bower_
             var hammer = new Hammer(element);
             hammer.on('panstart', function () {
                 var drawing = _this;
+                if (Date.now() - drawing._pinchFinished < 10)
+                    return;
+                drawing._inPan = true;
                 drawing.normalizeTransform();
+                console.log('ps');
             });
             hammer.on('pan', function (e) {
                 var drawing = _this;
+                if (Date.now() - drawing._pinchFinished < 10)
+                    return;
+                if (!drawing._inPan)
+                    return;
                 drawing._t.dx = e.deltaX;
                 drawing._t.dy = e.deltaY;
                 drawing.transform();
             });
             hammer.on('panend', function (e) {
                 var drawing = _this;
+                if (Date.now() - drawing._pinchFinished < 10)
+                    return;
+                if (!drawing._inPan)
+                    return;
+                drawing._inPan = false;
                 drawing.normalizeTransform();
                 drawing.transform();
             });
             hammer.get('pinch').set({ enable: true });
+            hammer.on('pinchstart', function (e) {
+                var drawing = _this;
+                drawing._pinchStart = e.center;
+                drawing.normalizeTransform();
+                drawing._pinchFinished = null;
+            });
+            hammer.on('pinch', function (e) {
+                var drawing = _this;
+                var newCenter = {
+                    x: drawing._pinchStart.x + (drawing._pinchStart.x - e.center.x),
+                    y: drawing._pinchStart.y + (drawing._pinchStart.y - e.center.y),
+                };
+                drawing.applyDScaleAt(e.scale - 1, newCenter);
+                drawing.transform();
+            });
+            hammer.on('pinchend', function (e) {
+                var drawing = _this;
+                drawing.normalizeTransform();
+                drawing.transform();
+                drawing._pinchFinished = Date.now();
+            });
+            hammer.on('pinchcancel', function (e) {
+                console.log('TODO: pinch cancel');
+            });
+            hammer.on('pinchmove', function (e) {
+            });
             if (!enableMousewheel)
                 return;
             svg.onwheel = function (e) {
                 var drawing = _this;
                 var delta = -e.deltaY / 20;
-                drawing.applyDScaleAt(delta, e);
+                drawing.applyDScaleAt(delta, { x: e.pageX, y: e.pageY });
                 drawing.normalizeTransform();
                 drawing.transform();
             };
@@ -16621,8 +16661,8 @@ define('draw',["require", "exports", 'Hammer', './runtime', "./util", "../bower_
             this._t.dscale = dscale;
             if (this._t.scale + this._t.dscale < MIN_SCALE)
                 this._t.dscale = MIN_SCALE - this._t.scale;
-            this._t.dx = -(e.pageX - this._t.x) * (this._t.dscale) / this._t.scale;
-            this._t.dy = -(e.pageY - this._t.y) * (this._t.dscale) / this._t.scale;
+            this._t.dx = -(e.x - this._t.x) * (this._t.dscale) / this._t.scale;
+            this._t.dy = -(e.y - this._t.y) * (this._t.dscale) / this._t.scale;
         };
         Drawing.prototype.transform = function (scale, x, y) {
             if (arguments.length === 3) {

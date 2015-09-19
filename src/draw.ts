@@ -1122,6 +1122,9 @@ export class Drawing {
 	paper: Snap.Paper;
 	_g: Snap.Element;
 	_t: Transform;
+	_pinchStart: Point;
+	_pinchFinished: number;
+	_inPan: boolean = false;
 	dEnts: Ent[];
 	namedEnts: {[n: string]: Ent};
 	zEnts: Ent[][];
@@ -1230,31 +1233,70 @@ export class Drawing {
 		let hammer = new Hammer(element);
 		hammer.on('panstart', function(): void {
 			let drawing = _this;
+			// debounce
+			if (Date.now() - drawing._pinchFinished < 10)
+				return;
+			drawing._inPan = true;
 			drawing.normalizeTransform();
 		});
 		hammer.on('pan', function(e: HammerInput): void {
 			let drawing = _this;
+			// debounce
+			if (Date.now() - drawing._pinchFinished < 10)
+				return;
+			if (!drawing._inPan)
+				return;
 			drawing._t.dx = e.deltaX;
 			drawing._t.dy = e.deltaY;
 			drawing.transform();
 		});
 		hammer.on('panend', function(e: HammerInput): void {
 			let drawing = _this;
+			// debounce
+			if (Date.now() - drawing._pinchFinished < 10)
+				return;
+			if (!drawing._inPan)
+				return;
+			drawing._inPan = false;
 			drawing.normalizeTransform();
 			drawing.transform();
 		});
+
 		hammer.get('pinch').set({enable: true});
 
-		/*
-		hammer.on('transformstart', function(e) {
-			var drawing = _this;
+		hammer.on('pinchstart', function(e: HammerInput): void {
+			let drawing = _this;
+			drawing._pinchStart = e.center;
 			drawing.normalizeTransform();
+			drawing._pinchFinished = null;
 		});
-		hammer.on('pinch', function(e) {
-			var drawing = _this;
-			drawing.applyDScaleAt(e.gesture.scale-1, e.gesture.center);
+
+		hammer.on('pinch', function(e: HammerInput): void {
+			let drawing = _this;
+			let newCenter = {
+				x: drawing._pinchStart.x + (drawing._pinchStart.x - e.center.x),
+				y: drawing._pinchStart.y + (drawing._pinchStart.y - e.center.y),
+			};
+			drawing.applyDScaleAt(e.scale-1, newCenter);
 			drawing.transform();
 		});
+
+		hammer.on('pinchend', function(e: HammerInput): void {
+			let drawing = _this;
+			drawing.normalizeTransform();
+			drawing.transform();
+			drawing._pinchFinished = Date.now();
+		});
+
+		hammer.on('pinchcancel', function(e: HammerInput): void {
+			console.log('TODO: pinch cancel');
+		});
+
+		hammer.on('pinchmove', function(e: HammerInput): void {
+			//console.log('pinch move');
+		});
+
+		/*
 		hammer.on('transformend', function(e) {
 			var drawing = _this;
 			drawing.normalizeTransform();
@@ -1268,18 +1310,18 @@ export class Drawing {
 		svg.onwheel = function(e: any): void {
 			let drawing = _this;
 			let delta = -e.deltaY/20;
-			drawing.applyDScaleAt(delta, e);
+			drawing.applyDScaleAt(delta, {x: e.pageX, y: e.pageY});
 			drawing.normalizeTransform();
 			drawing.transform();
 		};
 	}
 
-	applyDScaleAt(dscale: number, e: any): void {
+	applyDScaleAt(dscale: number, e: Point): void {
 		this._t.dscale = dscale;
 		if (this._t.scale + this._t.dscale < MIN_SCALE)
 			this._t.dscale = MIN_SCALE - this._t.scale;
-		this._t.dx = -(e.pageX - this._t.x)*(this._t.dscale)/this._t.scale;
-		this._t.dy = -(e.pageY - this._t.y)*(this._t.dscale)/this._t.scale;
+		this._t.dx = -(e.x - this._t.x)*(this._t.dscale)/this._t.scale;
+		this._t.dy = -(e.y - this._t.y)*(this._t.dscale)/this._t.scale;
 	}
 
 	transform(scale?: number, x?: number, y?: number): void {
