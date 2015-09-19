@@ -9,6 +9,8 @@
 
 'use strict';
 
+import Hammer = require('Hammer');
+
 import * as type from './type';
 import * as vars from './vars';
 import * as runtime from './runtime';
@@ -997,7 +999,7 @@ class DConnector implements Ent {
 				'stroke': this.color,
 				'fill': 'none',
 			}),
-			paper.circle(start.x, start.y, 2).attr({'stroke-width': 0, fill: '#c83639'}),
+			//paper.circle(start.x, start.y, 2).attr({'stroke-width': 0, fill: '#c83639'}),
 			arrowhead(paper, end.x, end.y, ARROWHEAD_RADIUS).attr({
 				'transform': 'rotate(' + arrowheadAngle + ',' + end.x + ',' + end.y + ')',
 				'stroke': this.color,
@@ -1076,7 +1078,7 @@ class DConnector implements Ent {
 				'stroke': this.color,
 				'fill': 'none',
 			}),
-			paper.circle(start.x, start.y, 2).attr({'stroke-width': 0, fill: '#c83639'}),
+			//paper.circle(start.x, start.y, 2).attr({'stroke-width': 0, fill: '#c83639'}),
 			arrowhead(paper, end.x, end.y, ARROWHEAD_RADIUS).attr({
 				'transform': 'rotate(' + arrowheadAngle + ',' + end.x + ',' + end.y + ')',
 				'stroke': this.color,
@@ -1225,26 +1227,25 @@ export class Drawing {
 
 		// Hammer.plugins.showTouches();
 		// Hammer.plugins.fakeMultitouch();
+		let hammer = new Hammer(element);
+		hammer.on('panstart', function(): void {
+			let drawing = _this;
+			drawing.normalizeTransform();
+		});
+		hammer.on('pan', function(e: HammerInput): void {
+			let drawing = _this;
+			drawing._t.dx = e.deltaX;
+			drawing._t.dy = e.deltaY;
+			drawing.transform();
+		});
+		hammer.on('panend', function(e: HammerInput): void {
+			let drawing = _this;
+			drawing.normalizeTransform();
+			drawing.transform();
+		});
+		hammer.get('pinch').set({enable: true});
+
 		/*
-		var hammer = new Hammer(element, {
-			preventDefault: true,
-			gesture: true,
-		});
-		hammer.on('dragstart', function() {
-			var drawing = _this;
-			drawing.normalizeTransform();
-		});
-		hammer.on('drag', function(e) {
-			var drawing = _this;
-			drawing._t.dx = e.gesture.deltaX;
-			drawing._t.dy = e.gesture.deltaY;
-			drawing.transform();
-		});
-		hammer.on('dragend', function(e) {
-			var drawing = _this;
-			drawing.normalizeTransform();
-			drawing.transform();
-		});
 		hammer.on('transformstart', function(e) {
 			var drawing = _this;
 			drawing.normalizeTransform();

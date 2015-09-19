@@ -8,6 +8,7 @@ MOCHA     ?= node_modules/.bin/mocha
 ALMOND     = bower_components/almond
 QJS        = bower_components/q/q.js
 MUSTACHEJS = bower_components/mustache.js/mustache.js
+HAMMERJS   = bower_components/hammerjs/hammer.js
 
 TSFLAGS    = -t es5 --noImplicitAny --removeComments
 
@@ -73,7 +74,8 @@ build: $(LIB_SRCS) $(CONFIG) bower_components
 	@echo "  TS    $@"
 	$(TSLINT) -c .tslint.json $(LIB_SRCS)
 	$(TSC) $(TSFLAGS) -m amd --outDir build $(LIB_SRCS)
-	cp -a $(MUSTACHEJS) $(QJS) $@
+	cp -a $(MUSTACHEJS) $(QJS) $(HAMMERJS) $@
+	cp -a $@/hammer.js $@/Hammer.js
 	touch $@
 
 build-rt: $(RT_SRCS) $(CONFIG)
