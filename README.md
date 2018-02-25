@@ -10,6 +10,25 @@ today's web and tomorrow's.  `sd.js` runs in all major browsers
 (Edge, Chrome, Firefox, Safari), and on the server under
 [node.js](https://nodejs.org).
 
+Usage
+-----------------
+
+Install & Build:
+```
+git clone https://github.com/bpowers/sd.js.git
+cd sd.js
+npm install
+npm run-script build
+```
+
+Serve the page:
+```
+npm install -g serve # If you don't have "serve" in your global node modules
+serve .
+```
+
+Then open your browser at: http://localhost:5000
+
 Clean, Simple API
 -----------------
 
