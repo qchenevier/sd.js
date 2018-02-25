@@ -25,7 +25,7 @@ function scaleDrawing() {
     drawing.transform(scale, wPadding/2 - 20, hPadding/2 - 40);
 }
 
-//$(window).resize(scaleDrawing);
+$(window).resize(scaleDrawing);
 
 function getQueryParams(qs) {
     'use strict';
